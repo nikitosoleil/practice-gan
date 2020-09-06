@@ -1,0 +1,4 @@
+apex
+torch
+torchvision
+tqdm
