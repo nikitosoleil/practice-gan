@@ -1,3 +1,3 @@
 from .base_train import BaseTrain
 from .locomotive import Locomotive
-from .wgan_train import WGANTrain
+from .gan_train import GANTrain

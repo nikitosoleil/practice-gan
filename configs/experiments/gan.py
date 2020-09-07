@@ -37,7 +37,7 @@ class Config(SystemConfig):
                         'lm': 1}
     learning_rate = dd(2e-4)
     max_norm = dd(1.0)
-    opt_level = "O1"
+    opt_level = None
 
     train_portion = 0.98
     training_steps = 100000
@@ -73,17 +73,17 @@ class Config(SystemConfig):
 # TODO: console logs
 
 from torch.optim import Adam
-from models import BaseModel, WGANDiscriminator
+from models import BaseModel, Discriminator
 from networks import GeneratorNN, DiscriminatorNN
-from trains import WGANTrain
+from trains import GANTrain
 
 
 class Components:
     dataset = lambda: None
     models = {'generator': BaseModel,
-              'discriminator': WGANDiscriminator}
+              'discriminator': Discriminator}
     networks = {'generator': GeneratorNN,
                 'discriminator': DiscriminatorNN}
     optimizers = dd(lambda *args, **kwargs: Adam(*args, **kwargs, betas=Config.adam_betas))
-    train = WGANTrain
+    train = GANTrain
     interact = None

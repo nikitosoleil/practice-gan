@@ -35,9 +35,6 @@ class BaseModel:
     def _load(self, network_cls, restore_path):
         self.network = network_cls()
 
-        if restore_path is None:
-            restore_path = Config.model_defaults.get(self.name, None)
-
         if restore_path is not None:
             state_dict_path = os.path.join(self._get_path(restore_path), self.model_file)
             state_dict = torch.load(state_dict_path)

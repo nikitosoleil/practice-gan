@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 from configs import Config
@@ -24,9 +25,14 @@ class DiscriminatorNN(nn.Module):
         ds_size = Config.img_size // 2 ** 4
         self.adv_layer = nn.Sequential(nn.Linear(128 * ds_size ** 2, 1), nn.Sigmoid())
 
-    def forward(self, img):
-        out = self.model(img)
-        out = out.view(out.shape[0], -1)
-        validity = self.adv_layer(out)
+        self.loss = torch.nn.BCELoss()
 
-        return validity
+    def forward(self, input_imgs, labels=None):
+        out = self.model(input_imgs)
+        out = out.view(out.shape[0], -1)
+        probs = self.adv_layer(out)
+        result = (probs,)
+        if labels is not None:
+            loss = self.loss(probs, labels)
+            result = (loss,) + result
+        return result

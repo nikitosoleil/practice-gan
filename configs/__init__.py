@@ -37,7 +37,7 @@ class Config(SystemConfig):
                         'lm': 1}
     learning_rate = dd(2e-4)
     max_norm = dd(1.0)
-    opt_level = "O1"
+    opt_level = None
 
     train_portion = 0.98
     training_steps = 100000
@@ -66,33 +66,24 @@ class Config(SystemConfig):
     restore_from = '-1'
     restore_time = '-1'
 
-    seed = 6092020
+    seed = 1092020
 
 
 # TODO: more per-model options
 # TODO: console logs
 
 from torch.optim import Adam
-from transformers import AdamW
-from datasets import TwoUtterancesDataset
-from models import Generator, WGANDiscriminator
-from networks import GPT2RLModel, GPT2WGANModel
-from trains import LMInteract, WGANTrain
-from utils.tokenizers import GPT2TokenizerPatched as GPT2Tokenizer
-
-
-# from utils.tokenizers import GPT2TokenizerPatched
+from models import BaseModel, Discriminator
+from networks import GeneratorNN, DiscriminatorNN
+from trains import GANTrain
 
 
 class Components:
-    models = {'generator': Generator,
-              'discriminator': WGANDiscriminator}
-    networks = {'generator': GPT2RLModel,
-                'discriminator': GPT2WGANModel}
-    tokenizers = {'generator': GPT2Tokenizer,
-                  'discriminator': GPT2Tokenizer}  # ,
-    # 'bert': BertTokenizer,
-    # 'scorer': Scorer}
-    optimizers = dd(AdamW)
-    train = WGANTrain
-    interact = LMInteract
+    dataset = lambda: None
+    models = {'generator': BaseModel,
+              'discriminator': Discriminator}
+    networks = {'generator': GeneratorNN,
+                'discriminator': DiscriminatorNN}
+    optimizers = dd(lambda *args, **kwargs: Adam(*args, **kwargs, betas=Config.adam_betas))
+    train = GANTrain
+    interact = None

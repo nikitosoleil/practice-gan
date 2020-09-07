@@ -111,7 +111,7 @@ class Builder:
 
     def create_models(self):
         for name in Config.models:
-            self.models[name] = Components.models[name](name, Components.networks[name], Components.tokenizers[name],
+            self.models[name] = Components.models[name](name, Components.networks[name],
                                                         self.restoration_path if name in Config.trainable_models else None)
         logging.info('Models created')
 
