@@ -5,34 +5,44 @@ from configs import Config
 
 
 class DiscriminatorNN(nn.Module):
+    filters = [Config.channels, 16, 32, 64, 128]
+
     def __init__(self):
-        super(DiscriminatorNN, self).__init__()
+        super().__init__()
+        self.inter_size = Config.img_size // 2 ** (len(DiscriminatorNN.filters) - 1)
+        self.inter_act = nn.LeakyReLU(negative_slope=0.2, inplace=True)
 
-        def discriminator_block(in_filters, out_filters, bn=True):
-            block = [nn.Conv2d(in_filters, out_filters, 3, 2, 1), nn.LeakyReLU(0.2, inplace=True), nn.Dropout2d(0.25)]
-            if bn:
-                block.append(nn.BatchNorm2d(out_filters, 0.8))
-            return block
+        self.dropout = nn.Dropout2d(p=0.25)
 
-        self.model = nn.Sequential(
-            *discriminator_block(Config.channels, 16, bn=False),
-            *discriminator_block(16, 32),
-            *discriminator_block(32, 64),
-            *discriminator_block(64, 128),
-        )
+        def get_block(in_filters, out_filters):
+            return nn.Sequential(nn.Conv2d(in_filters, out_filters, kernel_size=3, stride=2, padding=1),
+                                 self.inter_act,
+                                 self.dropout,
+                                 nn.BatchNorm2d(out_filters))
 
-        # The height and width of downsampled image
-        ds_size = Config.img_size // 2 ** 4
-        self.adv_layer = nn.Sequential(nn.Linear(128 * ds_size ** 2, 1), nn.Sigmoid())
+        self.blocks = nn.Sequential(*[get_block(inf, outf) for (inf, outf) in
+                                      zip(DiscriminatorNN.filters[:-1], DiscriminatorNN.filters[1:])])
 
-        self.loss = torch.nn.BCELoss()
+        self.proj = nn.Linear(DiscriminatorNN.filters[-1] * self.inter_size ** 2, 1)
 
     def forward(self, input_imgs, labels=None):
-        out = self.model(input_imgs)
+        out = self.blocks(input_imgs)
         out = out.view(out.shape[0], -1)
-        probs = self.adv_layer(out)
-        result = (probs,)
+        logits = self.proj(out)
+
+        result = (logits,)
+        return result
+
+
+class GANDiscriminatorNN(DiscriminatorNN):
+    def __init__(self):
+        super().__init__()
+        self.loss = torch.nn.BCEWithLogitsLoss()
+
+    def forward(self, input_imgs, labels=None):
+        result = super().forward(input_imgs, labels)
+        logits = result[0]
         if labels is not None:
-            loss = self.loss(probs, labels)
+            loss = self.loss(logits, labels)
             result = (loss,) + result
         return result

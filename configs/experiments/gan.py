@@ -33,18 +33,15 @@ class Config(SystemConfig):
     accumulation_steps = {'discrimination': 1,
                           'generation': 1}
     batches_per_step = {'discrimination': 1,
-                        'generation': 1,
-                        'lm': 1}
+                        'generation': 1}
     learning_rate = dd(2e-4)
     max_norm = dd(1.0)
-    opt_level = None
+    opt_level = None  # 'O1'
 
     train_portion = 0.98
     training_steps = 100000
-    val_samples = 16
+    val_samples = 25
     val_all_batches = 16
-
-    adam_betas = (0.5, 0.999)
 
     # SCHEDULING
 
@@ -74,8 +71,8 @@ class Config(SystemConfig):
 
 from torch.optim import Adam
 from models import BaseModel, Discriminator
-from networks import GeneratorNN, DiscriminatorNN
-from trains import GANTrain
+from networks import GeneratorNN, GANDiscriminatorNN
+from trains import GANTrain, GANInteract
 
 
 class Components:
@@ -83,7 +80,7 @@ class Components:
     models = {'generator': BaseModel,
               'discriminator': Discriminator}
     networks = {'generator': GeneratorNN,
-                'discriminator': DiscriminatorNN}
-    optimizers = dd(lambda *args, **kwargs: Adam(*args, **kwargs, betas=Config.adam_betas))
+                'discriminator': GANDiscriminatorNN}
+    optimizers = dd(Adam)
     train = GANTrain
-    interact = None
+    interact = GANInteract

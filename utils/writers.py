@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List
 
+import torch
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -20,6 +21,8 @@ class TBWriter(Writer):
             self.tb_writer.add_text(name, value, time)
         elif isinstance(value, dict):
             self.tb_writer.add_scalars(name, value, time)
+        elif isinstance(value, torch.Tensor) and value.dim() == 4 and value.shape[1] in {1, 3}:
+            self.tb_writer.add_images(name, value, time)
         else:
             self.tb_writer.add_scalar(name, value, time)
 

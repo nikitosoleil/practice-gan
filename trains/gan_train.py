@@ -10,30 +10,18 @@ from torchvision.utils import save_image
 from tqdm import trange
 
 from configs import Config, Status
-from iterators import PerpetualLoader
 from models import BaseModel
 from utils.checkpointer import Checkpointer
 from utils.reporter import Reporter
+from utils.iterators import PerpetualLoader
 from utils.scheduler import Scheduler
 from .locomotive import Locomotive
-
-
-def weights_init_normal(m):
-    classname = m.__class__.__name__
-    if classname.find("Conv") != -1:
-        torch.nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif classname.find("BatchNorm2d") != -1:
-        torch.nn.init.normal_(m.weight.data, 1.0, 0.02)
-        torch.nn.init.constant_(m.bias.data, 0.0)
 
 
 class GANTrain(Locomotive):
     def __init__(self, dataset: Dataset, models: Dict[str, BaseModel], optimizers: Dict[str, Optimizer],
                  reporter: Reporter, checkpointer: Checkpointer):
         super().__init__(dataset, models, optimizers, reporter, checkpointer)
-
-        for model in self.models:
-            self.models[model].network.apply(weights_init_normal)
 
         assert Config.batch_size['generation'] == Config.batch_size['discrimination']  # single dataloader
 
@@ -74,7 +62,7 @@ class GANTrain(Locomotive):
                     g_loss, g_stats = self.models['discriminator'].train(input_imgs=gen_imgs, labels=ones)
 
                     self.loose(g_loss, 'generator', 'generation', 1)
-                    self.reporter.full_report('training', 'generation', g_loss, g_stats)
+                    self.reporter.full_report('training', 'generation', g_loss, {})
 
                 if Config.is_running['discrimination']:
                     # t.set_postfix_str('discrimination')
@@ -96,7 +84,9 @@ class GANTrain(Locomotive):
                     self.reporter.push('training')
 
                 if Scheduler.is_validating('generator'):
-                    save_image(gen_imgs.data[:25], "images/%d.png" % Status.time, nrow=5, normalize=True)
+                    self.reporter.direct_report('sampling', gen_imgs[:Config.val_samples])
+                    # TODO: remove this
+                    save_image(gen_imgs[:Config.val_samples], "images/%d.png" % Status.time, nrow=5, normalize=True)
 
                 if Scheduler.is_checkpointing() and not Config.test_mode:
                     self.checkpointer.save(self.models, self.optimizers, Status.time)
