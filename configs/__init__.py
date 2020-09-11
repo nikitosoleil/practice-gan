@@ -23,6 +23,7 @@ class Config(SystemConfig):
     latent_dim = 100
     img_size = 32
     channels = 1
+    clip_value = 0.01
 
     # TRAINING
 
@@ -32,9 +33,9 @@ class Config(SystemConfig):
                   'generation': 64}
     accumulation_steps = {'discrimination': 1,
                           'generation': 1}
-    batches_per_step = {'discrimination': 1,
+    batches_per_step = {'discrimination': 5,
                         'generation': 1}
-    learning_rate = dd(2e-4)
+    learning_rate = dd(5e-5)
     max_norm = dd(1.0)
     opt_level = None  # 'O1'
 
@@ -70,17 +71,17 @@ class Config(SystemConfig):
 # TODO: console logs
 
 from torch.optim import Adam
-from models import BaseModel, Discriminator
-from networks import GeneratorNN, GANDiscriminatorNN
-from trains import GANTrain, GANInteract
+from models import BaseModel, WGANDiscriminator
+from networks import GeneratorNN, WGANDiscriminatorNN
+from trains import WGANTrain, GANInteract
 
 
 class Components:
     dataset = lambda: None
     models = {'generator': BaseModel,
-              'discriminator': Discriminator}
+              'discriminator': WGANDiscriminator}
     networks = {'generator': GeneratorNN,
-                'discriminator': GANDiscriminatorNN}
+                'discriminator': WGANDiscriminatorNN}
     optimizers = dd(Adam)
-    train = GANTrain
+    train = WGANTrain
     interact = GANInteract

@@ -25,7 +25,7 @@ class DiscriminatorNN(nn.Module):
 
         self.proj = nn.Linear(DiscriminatorNN.filters[-1] * self.inter_size ** 2, 1)
 
-    def forward(self, input_imgs, labels=None):
+    def forward(self, input_imgs):
         out = self.blocks(input_imgs)
         out = out.view(out.shape[0], -1)
         logits = self.proj(out)
@@ -40,9 +40,18 @@ class GANDiscriminatorNN(DiscriminatorNN):
         self.loss = torch.nn.BCEWithLogitsLoss()
 
     def forward(self, input_imgs, labels=None):
-        result = super().forward(input_imgs, labels)
+        result = super().forward(input_imgs)
         logits = result[0]
         if labels is not None:
             loss = self.loss(logits, labels)
             result = (loss,) + result
+        return result
+
+
+class WGANDiscriminatorNN(DiscriminatorNN):
+    def forward(self, input_imgs):
+        result = super().forward(input_imgs)
+        logits = result[0]
+        loss = logits.mean()
+        result = (loss,) + result
         return result

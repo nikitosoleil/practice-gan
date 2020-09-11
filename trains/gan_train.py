@@ -59,7 +59,7 @@ class GANTrain(Locomotive):
 
                     gen_imgs = self.models['generator'].train(z)[0]
 
-                    g_loss, g_stats = self.models['discriminator'].train(input_imgs=gen_imgs, labels=ones)
+                    g_loss, _ = self.models['discriminator'].train(input_imgs=gen_imgs, labels=ones)
 
                     self.loose(g_loss, 'generator', 'generation', 1)
                     self.reporter.full_report('training', 'generation', g_loss, {})

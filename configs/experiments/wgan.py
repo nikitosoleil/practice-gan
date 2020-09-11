@@ -71,17 +71,17 @@ class Config(SystemConfig):
 # TODO: console logs
 
 from torch.optim import Adam
-from models import BaseModel, Discriminator
-from networks import GeneratorNN, DiscriminatorNN
-from trains import GANTrain, GANInteract
+from models import BaseModel, WGANDiscriminator
+from networks import GeneratorNN, WGANDiscriminatorNN
+from trains import WGANTrain, GANInteract
 
 
 class Components:
     dataset = lambda: None
     models = {'generator': BaseModel,
-              'discriminator': Discriminator}
+              'discriminator': WGANDiscriminator}
     networks = {'generator': GeneratorNN,
-                'discriminator': DiscriminatorNN}
+                'discriminator': WGANDiscriminatorNN}
     optimizers = dd(Adam)
-    train = GANTrain
+    train = WGANTrain
     interact = GANInteract
